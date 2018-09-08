@@ -1,11 +1,13 @@
+const {ObjectID} = require('mongodb');
 var express = require('express');
 var bodyParser = require('body-parser');
 
-var {mongoos} = require('./db/mongoose.js');
+var {mongoose} = require('./db/mongoose.js');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
+
 
 app.use(bodyParser.json());
 
@@ -28,6 +30,35 @@ app.get('/todos', (req, res) => {
         res.status(400).send(err);
     });
 });
+
+// GET /todos/1234
+app.get('/todos/:id',(req, res) => {
+    //res.send(req.params);
+    var id = req.params.id;
+    //Validate ID using IsValid, respond with 404
+    console.log('ID:',id);
+    if (!ObjectID.isValid(id))
+    {
+        console.log('Invalid ID:',id);
+        res.status(404).send({});
+    }
+
+    //Query the database, FindbyID
+    Todo.findById(id).then((todo) =>{
+        
+        if (!todo) {
+            //return console.log('ID not found');
+            return res.status(404).send('Not found');
+        }
+        res.send.status(200).send({todo});
+        //console.log('Todo:',todo);
+    }).catch((e)=>res.status(404).send('Not found'));
+    //Error->Send back 400 and send back nothing
+    //Succes->if todo, send it back
+    // if no todo, call succeeded but ID not found, send 404 with empty body
+
+
+})
 
 app.listen(3000, ()=>{
     console.log('Started on port 3000');
